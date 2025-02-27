@@ -1,0 +1,13 @@
+{
+    "name": "ml-training",
+    "version": "1.0.0",
+    "description": "Treinamento automático de modelo ML com TensorFlow.js",
+    "main": "training/train.js",
+    "scripts": {
+        "train": "node training/train.js"
+    },
+    "dependencies": {
+        "@tensorflow/tfjs-node": "^4.0.0"
+    }
+}
+  
