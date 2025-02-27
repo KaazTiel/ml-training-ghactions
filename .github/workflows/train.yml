@@ -1,7 +1,5 @@
 name: Train ML Model
 
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-
 on:
   schedule:
     - cron: '0 0 * * *'  # Executa diariamente à meia-noite (UTC)
