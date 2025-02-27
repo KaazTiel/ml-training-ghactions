@@ -1,5 +1,7 @@
 name: Train ML Model
 
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+
 on:
   schedule:
     - cron: '0 0 * * *'  # Executa diariamente à meia-noite (UTC)
@@ -11,10 +13,10 @@ jobs:
 
     steps:
       - name: Clonar repositório
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -25,7 +27,7 @@ jobs:
         run: npm run train
 
       - name: Salvar modelo treinado como artefato
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trained-model
           path: training/model/
