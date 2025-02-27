@@ -24,8 +24,16 @@ jobs:
       - name: Executar treinamento
         run: npm run train
 
-      - name: Salvar modelo treinado como artefato
-        uses: actions/upload-artifact@v4
-        with:
-          name: trained-model
-          path: training/model/
+      - name: Commit e Push do modelo
+        run: |
+          git add training/model/model.json
+          git commit -m "Adicionando modelo treinado"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Salvar modelo treinado como artefato
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: trained-model
+      #     path: training/model/
