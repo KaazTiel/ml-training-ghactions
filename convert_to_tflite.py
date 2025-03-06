@@ -7,11 +7,11 @@ def convert_model(model_json_path, weights_bin_path, output_path):
         model_json = json_file.read()
 
     # Garantir que o modelo seja carregado a partir do JSON
-    model = model_from_json(model_json)
+    model = model_from_json(model_json)  # Garantindo que estamos criando o modelo Keras
 
     # Carregar os pesos a partir do arquivo binário
     try:
-        model.load_weights(weights_bin_path)
+        model.load_weights(weights_bin_path)  # Certifique-se de que o caminho dos pesos está correto
     except Exception as e:
         print(f"Erro ao carregar os pesos: {e}")
         exit(1)
