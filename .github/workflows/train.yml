@@ -40,6 +40,6 @@ jobs:
           tar -czf training_model.tar.gz -C training/model .
 
       - name: Fazer Deploy do Modelo para Firebase ML
-        run: firebase ml deploy --model-name meu_modelo --model-file training_model.tar.gz --project ml-training-ghactions
+        run: firebase ml:deploy --model-file training_model.tar.gz --project ml-training-ghactions
         env:
           GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
