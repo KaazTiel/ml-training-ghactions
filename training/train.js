@@ -23,6 +23,10 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
     }
 
     // Salvar o modelo treinado na pasta "training/model"
-    await model.save(`file://${path.join(modelDir, 'model.h5')}`);
-    console.log("Modelo salvo com sucesso!");
+    try {
+        await model.save(`file://${path.join(modelDir, 'model.h5')}`);
+        console.log("Modelo salvo com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar o modelo:", error);
+    }
 })();
