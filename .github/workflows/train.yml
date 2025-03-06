@@ -24,16 +24,30 @@ jobs:
       - name: Executar treinamento do modelo
         run: npm run train
 
-      - name: Verificar modelo salvo
-        run: ls -R training/model  # Para depuração, ver o que foi salvo
+      - name: Verificar se o modelo foi salvo corretamente
+        run: |
+          # Verificar conteúdo do diretório training/model
+          ls -R training/model
+          # Garantir que o arquivo model.h5 exista
+          if [ -f "training/model/model.h5" ]; then
+            echo "model.h5 encontrado!"
+          else
+            echo "model.h5 não encontrado, ou é um diretório."
+            exit 1
+          fi
 
-      - name: Instalar TensorFlow
+      - name: Instalar dependências do TensorFlow
         run: |
           python -m pip install --upgrade pip
           pip install tensorflow
 
+      - name: Verificar se TensorFlow está instalado
+        run: |
+          python -c "import tensorflow as tf; print(tf.__version__)"
+
       - name: Converter modelo .h5 para .tflite
         run: |
+          # Certificar-se de que o modelo .h5 está no diretório correto
           python convert_to_tflite.py
 
       - name: Instalar Firebase CLI
