@@ -5,10 +5,16 @@ def convert_model(model_json_path, weights_bin_path, output_path):
     # Carregar a arquitetura do modelo a partir do arquivo JSON
     with open(model_json_path, 'r') as json_file:
         model_json = json_file.read()
+
+    # Garantir que o modelo seja carregado a partir do JSON
     model = model_from_json(model_json)
 
     # Carregar os pesos a partir do arquivo binário
-    model.load_weights(weights_bin_path)
+    try:
+        model.load_weights(weights_bin_path)
+    except Exception as e:
+        print(f"Erro ao carregar os pesos: {e}")
+        exit(1)
 
     # Converter o modelo para o formato TFLite
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
