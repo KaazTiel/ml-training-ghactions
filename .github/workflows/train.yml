@@ -21,6 +21,11 @@ jobs:
       - name: Instalar dependências
         run: npm install
 
+      - name: Instalar dependências do TensorFlow
+        run: |
+          python -m pip install --upgrade pip
+          pip install tensorflow
+
       - name: Executar treinamento do modelo
         run: npm run train
 
@@ -38,23 +43,14 @@ jobs:
             exit 1
           fi
 
-      - name: Instalar dependências do TensorFlow
-        run: |
-          python -m pip install --upgrade pip
-          pip install tensorflow
-
-      - name: Verificar se TensorFlow está instalado
-        run: |
-          python -c "import tensorflow as tf; print(tf.__version__)"
-
       - name: Converter modelo .h5 para .tflite
         run: |
           if [ -f "training/model/model.h5" ]; then
             echo "Carregando modelo .h5"
-            python convert_to_tflite.py  # Certifique-se de que este script converte corretamente o .h5
+            python convert_to_tflite.py
           elif [ -f "training/model/model.json" ] && [ -f "training/model/weights.bin" ]; then
             echo "Carregando modelo com arquivos separados (model.json e weights.bin)"
-            python convert_with_json_weights.py  # Este script deve lidar com a conversão usando os arquivos JSON e BIN
+            python convert_with_json_weights.py
           else
             echo "Nenhum arquivo de modelo válido encontrado."
             exit 1
