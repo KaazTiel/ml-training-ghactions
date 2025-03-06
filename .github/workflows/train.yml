@@ -32,14 +32,13 @@ jobs:
 
       - name: Autenticar Firebase com Service Account
         run: |
-          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > $HOME/firebase-service-account.json
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/firebase-service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
 
       - name: Configurar Firebase com o projeto específico
-        run: firebase use ml-training-ghactions --alias default
+        run: firebase use --add ml-training-ghactions  # Associar o projeto Firebase
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
 
       - name: Compactar modelo para envio
         run: |
@@ -48,4 +47,4 @@ jobs:
       - name: Fazer Deploy do Modelo para Firebase ML
         run: firebase ml deploy --model-name meu_modelo --model-file training_model.tar.gz --project ml-training-ghactions
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
