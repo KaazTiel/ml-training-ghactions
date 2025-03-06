@@ -1,4 +1,6 @@
+import * as fs from 'fs';
 import * as tf from '@tensorflow/tfjs-node';
+import * as path from 'path';
 
 // Criando um conjunto de dados de exemplo (regressão linear)
 const xs = tf.tensor2d([1, 2, 3, 4], [4, 1]); // Entradas
@@ -14,7 +16,13 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
     await model.fit(xs, ys, { epochs: 100 });
     console.log("Treinamento concluído!");
 
+    // Garantir que o diretório exista antes de salvar
+    const modelDir = 'training/model';
+    if (!fs.existsSync(modelDir)) {
+        fs.mkdirSync(modelDir, { recursive: true });  // Cria o diretório se não existir
+    }
+
     // Salvar o modelo treinado na pasta "training/model"
-    await model.save('file://training/model/model.h5');
-    console.log("Modelo salvo como .h5!");
+    await model.save(`file://${path.join(modelDir, 'model.h5')}`);
+    console.log("Modelo salvo com sucesso!");
 })();
