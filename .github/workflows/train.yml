@@ -1,9 +1,9 @@
-name: Train ML Model
+name: Train and Deploy ML Model
 
 on:
   schedule:
     - cron: '0 0 * * *'  # Executa diariamente à meia-noite (UTC)
-  workflow_dispatch:  # Permite a execução manual do workflow, se desejado
+  workflow_dispatch:  # Permite execução manual
 
 jobs:
   train:
@@ -21,28 +21,23 @@ jobs:
       - name: Instalar dependências
         run: npm install
 
-      - name: Configurar Git com Secrets
-        run: |
-          git config --global user.name "${{ secrets.GIT_USER_NAME }}"
-          git config --global user.email "${{ secrets.GIT_USER_EMAIL }}"
-
-      - name: Executar treinamento
+      - name: Executar treinamento do modelo
         run: npm run train
 
-      - name: Autenticar GitHub com token
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
+      - name: Verificar modelo salvo
+        run: ls -R training/model  # Para depuração, ver o que foi salvo
 
-      - name: Commit e Push do modelo
-        run: |
-          git add training/model/model.json
-          git commit -m "Adicionando modelo treinado"
-          git push
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Instalar Firebase CLI
+        run: npm install -g firebase-tools
 
-      # - name: Salvar modelo treinado como artefato
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: trained-model
-      #     path: training/model/
+      - name: Autenticar Firebase
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: firebase login:ci --token "$FIREBASE_TOKEN"
+
+      - name: Compactar modelo para envio
+        run: |
+          tar -czf training_model.tar.gz -C training/model .
+
+      - name: Fazer Deploy do Modelo para Firebase ML
+        run: firebase ml deploy --model-name meu_modelo --model-file training_model.tar.gz
