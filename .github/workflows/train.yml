@@ -36,7 +36,7 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
 
       - name: Configurar Firebase com o projeto específico
-        run: firebase use --add ml-training-ghactions  # Associar o projeto Firebase
+        run: firebase use ml-training-ghactions
         env:
           GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
 
