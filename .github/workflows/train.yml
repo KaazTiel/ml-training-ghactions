@@ -35,11 +35,6 @@ jobs:
           echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/firebase-service-account.json
           export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
 
-      - name: Configurar Firebase com o projeto específico
-        run: firebase use ml-training-ghactions
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
-
       - name: Compactar modelo para envio
         run: |
           tar -czf training_model.tar.gz -C training/model .
