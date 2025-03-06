@@ -34,7 +34,7 @@ jobs:
 
       - name: Converter modelo .h5 para .tflite
         run: |
-          python training/convert_to_tflite.py
+          python convert_to_tflite.py
 
       - name: Instalar Firebase CLI
         run: npm install -g firebase-tools
