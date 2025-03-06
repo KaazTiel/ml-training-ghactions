@@ -6,8 +6,8 @@ def convert_model(model_json_path, weights_bin_path, output_path):
     with open(model_json_path, 'r') as json_file:
         model_json = json_file.read()
 
-    # Garantir que o modelo seja carregado a partir do JSON
-    model = model_from_json(model_json)  # Garantindo que estamos criando o modelo Keras
+    # Carregar o modelo a partir do arquivo JSON
+    model = model_from_json(model_json)
 
     # Carregar os pesos a partir do arquivo binário
     try:
