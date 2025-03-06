@@ -31,13 +31,14 @@ jobs:
 
       - name: Verificar conteúdo do diretório training/model
         run: |
-          # Verificar se o arquivo model.json e weights.bin existem
+          # Verificar se os arquivos model.json e weights.bin existem
           if [ -f "training/model/model.json" ] && [ -f "training/model/weights.bin" ]; then
             echo "Arquivos model.json e weights.bin encontrados!"
           else
             echo "Arquivos não encontrados ou estrutura de diretórios inesperada."
             exit 1
           fi
+
 
 
       - name: Converter modelo .h5 para .tflite

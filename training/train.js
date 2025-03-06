@@ -22,16 +22,17 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
         fs.mkdirSync(modelDir, { recursive: true });  // Cria o diretório se não existir
     }
 
+    // Salvar a arquitetura do modelo (JSON)
     try {
-        // Salvar o modelo (arquitetura) como model.json
-        await model.save(`file://${path.join(modelDir, 'model.json')}`);
-        console.log("Modelo salvo como model.json!");
+        const modelJson = model.toJSON(); // Obtém a arquitetura em JSON
+        fs.writeFileSync(path.join(modelDir, 'model.json'), JSON.stringify(modelJson));
+        console.log("Modelo (JSON) salvo com sucesso!");
 
-        // Salvar os pesos como weights.bin
-        const weights = await model.getWeights();
-        const weightsBuffer = Buffer.concat(weights.map(weight => weight.dataSync()));
-        fs.writeFileSync(path.join(modelDir, 'weights.bin'), weightsBuffer);
-        console.log("Pesos salvos como weights.bin!");
+        // Salvar os pesos do modelo (binário)
+        const weights = model.getWeights(); // Obtém os pesos do modelo
+        const weightBuffer = Buffer.concat(weights.map(weight => Buffer.from(weight.dataSync())));
+        fs.writeFileSync(path.join(modelDir, 'weights.bin'), weightBuffer);
+        console.log("Pesos (weights.bin) salvos com sucesso!");
     } catch (error) {
         console.error("Erro ao salvar o modelo:", error);
     }
