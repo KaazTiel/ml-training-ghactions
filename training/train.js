@@ -15,6 +15,6 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
     console.log("Treinamento concluído!");
 
     // Salvar o modelo treinado na pasta "training/model"
-    await model.save('file://training/model');
-    console.log("Modelo salvo com sucesso!");
+    await model.save('file://training/model/model.h5');
+    console.log("Modelo salvo como .h5!");
 })();
