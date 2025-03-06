@@ -28,7 +28,7 @@ jobs:
         run: |
           # Verificar conteúdo do diretório training/model
           ls -R training/model
-          # Garantir que o arquivo model.h5 exista
+          # Verificar se o arquivo .h5 ou os arquivos separados (model.json e weights.bin) existem
           if [ -f "training/model/model.h5" ]; then
             echo "model.h5 encontrado!"
           elif [ -f "training/model/model.json" ] && [ -f "training/model/weights.bin" ]; then
@@ -51,10 +51,10 @@ jobs:
         run: |
           if [ -f "training/model/model.h5" ]; then
             echo "Carregando modelo .h5"
-            python convert_to_tflite.py
+            python convert_to_tflite.py  # Certifique-se de que este script converte corretamente o .h5
           elif [ -f "training/model/model.json" ] && [ -f "training/model/weights.bin" ]; then
             echo "Carregando modelo com arquivos separados (model.json e weights.bin)"
-            python convert_with_json_weights.py
+            python convert_with_json_weights.py  # Este script deve lidar com a conversão usando os arquivos JSON e BIN
           else
             echo "Nenhum arquivo de modelo válido encontrado."
             exit 1

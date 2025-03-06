@@ -22,9 +22,9 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
         fs.mkdirSync(modelDir, { recursive: true });  // Cria o diretório se não existir
     }
 
-    // Salvar o modelo treinado na pasta "training/model"
+    // Salvar o modelo treinado na pasta "training/model" (no formato .json e .bin)
     try {
-        await model.save(`file://${path.join(modelDir, 'model.h5')}`);
+        await model.save(`file://${path.join(modelDir, 'model')}`);
         console.log("Modelo salvo com sucesso!");
     } catch (error) {
         console.error("Erro ao salvar o modelo:", error);
