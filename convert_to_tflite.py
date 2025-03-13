@@ -3,31 +3,29 @@ from tensorflow.keras.models import model_from_json, load_model
 import numpy as np
 import os
 
-def load_weights_bin(model, weights_bin_path):
-    """Carrega pesos do modelo a partir de um arquivo binário."""
-    if not os.path.exists(weights_bin_path):
-        raise FileNotFoundError(f"Arquivo de pesos '{weights_bin_path}' não encontrado.")
+def load_weights_h5(model, weights_h5_path):
+    """Carrega pesos do modelo a partir de um arquivo .h5."""
+    if not os.path.exists(weights_h5_path):
+        raise FileNotFoundError(f"Arquivo de pesos '{weights_h5_path}' não encontrado.")
 
     try:
-        weights = np.fromfile(weights_bin_path, dtype=np.float32)
-        if len(weights) == 0:
-            raise ValueError("O arquivo de pesos está vazio.")
-        
-        # Define os pesos no modelo
-        model.set_weights([weights])
-        print("Pesos carregados com sucesso!")
+        model.load_weights(weights_h5_path)
+        print("Pesos do modelo carregados com sucesso!")
     except Exception as e:
-        raise RuntimeError(f"Erro ao carregar os pesos do binário: {e}")
+        raise RuntimeError(f"Erro ao carregar os pesos do .h5: {e}")
 
 def convert_model(output_path):
-    """Converte um modelo salvo em Keras (`.h5`) ou JSON + pesos binários (`.bin`) para TFLite."""
+    """Converte um modelo salvo em diferentes formatos (Keras `.h5`, JSON+pesos) para TFLite."""
     
-    # Diretórios esperados
+    # Opções de arquivos possíveis
     model_json_path = 'training/model/model.json'
     weights_bin_path = 'training/model/weights.bin'
+    weights_h5_path = 'training/model/model.weights.h5'
     keras_model_path = 'training/model/model.h5'
 
-    # Verifica se o modelo está salvo no formato Keras
+    model = None
+
+    # 1️⃣ Verifica se há um modelo Keras completo salvo como `.h5`
     if os.path.exists(keras_model_path):
         print(f"Modelo encontrado em formato Keras: {keras_model_path}")
         try:
@@ -35,9 +33,9 @@ def convert_model(output_path):
         except Exception as e:
             raise RuntimeError(f"Erro ao carregar o modelo Keras: {e}")
 
-    # Caso contrário, verifica se está no formato JSON + binário
-    elif os.path.exists(model_json_path) and os.path.exists(weights_bin_path):
-        print(f"Modelo encontrado em formato JSON + pesos binários: {model_json_path}, {weights_bin_path}")
+    # 2️⃣ Verifica se há um modelo salvo como JSON + pesos `.h5`
+    elif os.path.exists(model_json_path) and os.path.exists(weights_h5_path):
+        print(f"Modelo encontrado no formato JSON + pesos .h5: {model_json_path}, {weights_h5_path}")
         
         # Carrega a arquitetura do modelo
         try:
@@ -52,21 +50,39 @@ def convert_model(output_path):
 
         # Carrega os pesos
         try:
-            load_weights_bin(model, weights_bin_path)
+            load_weights_h5(model, weights_h5_path)
         except Exception as e:
-            raise RuntimeError(f"Erro ao carregar os pesos: {e}")
+            raise RuntimeError(f"Erro ao carregar os pesos .h5: {e}")
+
+    # 3️⃣ Verifica se há um modelo salvo como JSON + pesos `.bin` (alternativo)
+    elif os.path.exists(model_json_path) and os.path.exists(weights_bin_path):
+        print(f"Modelo encontrado no formato JSON + pesos binários: {model_json_path}, {weights_bin_path}")
+        
+        # Carrega a arquitetura do modelo
+        try:
+            with open(model_json_path, 'r') as json_file:
+                model_json = json_file.read().strip()
+            if not model_json:
+                raise ValueError("O arquivo model.json está vazio ou inválido.")
+
+            model = model_from_json(model_json)
+        except Exception as e:
+            raise RuntimeError(f"Erro ao carregar o modelo a partir do JSON: {e}")
+
+        # ⚠️ Aqui precisaria implementar corretamente a carga dos pesos binários
+        raise NotImplementedError("Carregamento de pesos .bin ainda não suportado corretamente.")
 
     else:
-        raise FileNotFoundError("Nenhum modelo encontrado nos formatos Keras (`.h5`) ou JSON + binário (`.bin`).")
+        raise FileNotFoundError("Nenhum modelo encontrado nos formatos esperados (`.h5`, JSON + `.h5`, JSON + `.bin`).")
 
-    # Converter o modelo para TFLite
+    # Converte o modelo para TFLite
     try:
         converter = tf.lite.TFLiteConverter.from_keras_model(model)
         tflite_model = converter.convert()
     except Exception as e:
         raise RuntimeError(f"Erro na conversão para TFLite: {e}")
 
-    # Salvar o modelo convertido
+    # Salva o modelo convertido
     with open(output_path, 'wb') as f:
         f.write(tflite_model)
 
