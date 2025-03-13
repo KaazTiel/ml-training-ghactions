@@ -63,15 +63,14 @@ jobs:
 
       - name: Converter modelo para .tflite
         run: |
-          MODEL_JSON=$(find training/model -type f -name "model.json")
-          MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
+          MODEL_H5=$(find training/model -type f -name "model.h5")
 
-          if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
-            echo "❌ Nenhum arquivo de modelo válido encontrado para conversão."
+          if [ -z "$MODEL_H5" ]; then
+            echo "❌ Nenhum arquivo de modelo .h5 encontrado para conversão."
             exit 1
           else
             echo "📌 Iniciando conversão do modelo para .tflite..."
-            python convert_to_tflite.py
+            python convert_to_tflite.py --model_h5 "$MODEL_H5"
           fi
 
       - name: Verificar se o modelo .tflite foi gerado
