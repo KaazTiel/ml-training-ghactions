@@ -24,7 +24,7 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
 
     try {
         // Salvar o modelo no formato Keras (.json + .bin)
-        await model.save(`file://${modelDir}`);
+        await model.save(`file://${modelDir}`, save_format='tf');
 
         console.log("Modelo salvo com sucesso no formato Keras!");
     } catch (error) {
