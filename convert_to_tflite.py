@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import model_from_json, load_model
 import numpy as np
 import os
+import tensorflowjs as tfjs  # Importando o tensorflowjs
 
 def load_weights_h5(model, weights_h5_path):
     """Carrega pesos do modelo a partir de um arquivo .h5."""
@@ -14,8 +15,8 @@ def load_weights_h5(model, weights_h5_path):
     except Exception as e:
         raise RuntimeError(f"Erro ao carregar os pesos do .h5: {e}")
 
-def convert_model(output_path):
-    """Converte um modelo salvo em diferentes formatos (Keras `.h5`, JSON+pesos) para TFLite."""
+def convert_model(output_path_tflite, output_path_tfjs):
+    """Converte um modelo salvo em diferentes formatos (Keras `.h5`, JSON+pesos) para TFLite e TensorFlow.js."""
     
     # Opções de arquivos possíveis
     model_json_path = 'training/model/model.json'
@@ -82,12 +83,21 @@ def convert_model(output_path):
     except Exception as e:
         raise RuntimeError(f"Erro na conversão para TFLite: {e}")
 
-    # Salva o modelo convertido
-    with open(output_path, 'wb') as f:
+    # Salva o modelo convertido em TFLite
+    with open(output_path_tflite, 'wb') as f:
         f.write(tflite_model)
 
-    print(f"Modelo convertido salvo em: {output_path}")
+    print(f"Modelo convertido para TFLite e salvo em: {output_path_tflite}")
+
+    # Converte o modelo para TensorFlow.js
+    try:
+        tfjs.converters.save_keras_model(model, output_path_tfjs)
+    except Exception as e:
+        raise RuntimeError(f"Erro na conversão para TensorFlow.js: {e}")
+
+    print(f"Modelo convertido para TensorFlow.js e salvo em: {output_path_tfjs}")
 
 if __name__ == "__main__":
-    output_path = 'training/model/model.tflite'
-    convert_model(output_path)
+    output_path_tflite = 'training/model/model.tflite'
+    output_path_tfjs = 'training/model/model_tfjs'
+    convert_model(output_path_tflite, output_path_tfjs)

@@ -19,7 +19,9 @@ jobs:
           node-version: '18'
 
       - name: Instalar dependências do Node.js
-        run: npm install
+        run: |
+          npm install
+          npm install @tensorflow/tfjs
 
       - name: Instalar dependências do TensorFlow
         run: |
