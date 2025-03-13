@@ -36,31 +36,46 @@ jobs:
       - name: Executar treinamento do modelo
         run: npm run train
 
-      - name: Verificar conteúdo do diretório training/model
+      - name: Debug – Listar arquivos gerados pelo treinamento
         run: |
-          if [ -f "training/model/model.json" ] && [ -f "training/model.weights.h5" ]; then
-            echo "Modelo salvo corretamente (model.json e model.weights.h5 encontrados)!"
-          else
-            echo "Arquivos do modelo não encontrados ou estrutura de diretórios inesperada."
+          echo "📂 Estrutura do diretório training/"
+          ls -R training/
+          echo "📂 Estrutura do diretório training/model/"
+          ls -lah training/model/ || echo "Diretório training/model não encontrado!"
+
+      - name: Verificar arquivos gerados pelo treinamento
+        run: |
+          MODEL_JSON=$(find training/model -type f -name "model.json")
+          MODEL_WEIGHTS=$(find training/model -type f -name "*.h5")
+
+          if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
+            echo "❌ Arquivos do modelo não encontrados!"
             exit 1
+          else
+            echo "✅ Modelo encontrado:"
+            echo "JSON: $MODEL_JSON"
+            echo "Pesos: $MODEL_WEIGHTS"
           fi
 
       - name: Converter modelo para .tflite
         run: |
-          if [ -f "training/model/model.json" ] && [ -f "training/model.weights.h5" ]; then
-            echo "Iniciando conversão para .tflite..."
-            python convert_to_tflite.py
-          else
-            echo "Nenhum arquivo de modelo válido encontrado para conversão."
+          MODEL_JSON=$(find training/model -type f -name "model.json")
+          MODEL_WEIGHTS=$(find training/model -type f -name "*.h5")
+
+          if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
+            echo "❌ Nenhum arquivo de modelo válido encontrado para conversão."
             exit 1
+          else
+            echo "📌 Iniciando conversão do modelo para .tflite..."
+            python convert_to_tflite.py
           fi
 
       - name: Verificar se o modelo .tflite foi gerado
         run: |
           if [ -f "training/model/model.tflite" ]; then
-            echo "Modelo convertido para .tflite com sucesso!"
+            echo "✅ Modelo convertido para .tflite com sucesso!"
           else
-            echo "Erro: modelo .tflite não foi encontrado."
+            echo "❌ Erro: modelo .tflite não foi encontrado."
             exit 1
           fi
 
