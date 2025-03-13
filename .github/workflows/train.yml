@@ -64,7 +64,7 @@ jobs:
       - name: Converter modelo para .tflite
         run: |
           MODEL_H5=$(find training/model -type f -name "model.h5")
-
+      
           if [ -z "$MODEL_H5" ]; then
             echo "❌ Nenhum arquivo de modelo .h5 encontrado para conversão."
             exit 1
