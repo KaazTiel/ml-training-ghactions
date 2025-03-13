@@ -23,8 +23,8 @@ class ModelConverter:
 
         # Caminhos para os modelos salvos
         self.model_dir = 'training/model'
-        self.model_json_path = os.path.join(self.model_dir, 'model.json')
-        self.weights_bin_path = os.path.join(self.model_dir, 'weights.bin')
+        self.model_json_path = os.path.join(self.model_dir, 'model.h5/model.json')
+        self.weights_bin_path = os.path.join(self.model_dir, 'model.h5/weights.bin')
 
         # Parâmetros para MobileNet
         self.input_node_name = 'the_input'
@@ -65,7 +65,7 @@ class ModelConverter:
                 logger.error(f"Erro ao carregar os pesos .bin: {e}")
                 return None
         else:
-            logger.error("Nenhum modelo encontrado nos formatos esperados (JSON + `.bin`).")
+            logger.error("Nenhum modelo encontrado nos formatos esperados (JSON + .bin).")
             return None
         
         return model
