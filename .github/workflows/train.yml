@@ -46,7 +46,7 @@ jobs:
       - name: Verificar arquivos gerados pelo treinamento
         run: |
           MODEL_JSON=$(find training/model -type f -name "model.json")
-          MODEL_WEIGHTS=$(find training/model -type f -name "*.h5")
+          MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
 
           if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
             echo "❌ Arquivos do modelo não encontrados!"
@@ -60,7 +60,7 @@ jobs:
       - name: Converter modelo para .tflite
         run: |
           MODEL_JSON=$(find training/model -type f -name "model.json")
-          MODEL_WEIGHTS=$(find training/model -type f -name "*.h5")
+          MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
 
           if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
             echo "❌ Nenhum arquivo de modelo válido encontrado para conversão."
