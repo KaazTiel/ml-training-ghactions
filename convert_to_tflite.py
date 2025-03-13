@@ -22,9 +22,9 @@ class ModelConverter:
         self.output_path_tfjs = output_path_tfjs
 
         # Caminhos para os modelos salvos
-        self.model_json_path = 'training/model/model.json'
-        self.weights_bin_path = 'training/model/weights.bin'
-        self.keras_model_path = 'training/model/model.h5'
+        self.model_dir = 'training/model'
+        self.model_json_path = os.path.join(self.model_dir, 'model.json')
+        self.weights_bin_path = os.path.join(self.model_dir, 'weights.bin')
 
         # Parâmetros para MobileNet
         self.input_node_name = 'the_input'
@@ -45,16 +45,8 @@ class ModelConverter:
         """Carrega o modelo conforme os arquivos disponíveis."""
         model = None
 
-        # 1️⃣ Verifica se há um modelo Keras completo salvo como `.h5`
-        if os.path.exists(self.keras_model_path):
-            logger.info(f"Modelo encontrado em formato Keras: {self.keras_model_path}")
-            try:
-                model = load_model(self.keras_model_path)
-            except Exception as e:
-                logger.error(f"Erro ao carregar o modelo Keras: {e}")
-
-        # 2️⃣ Verifica se há um modelo salvo como JSON + pesos `.bin`
-        elif os.path.exists(self.model_json_path) and os.path.exists(self.weights_bin_path):
+        # Verifica se há um modelo salvo como JSON + pesos `.bin`
+        if os.path.exists(self.model_json_path) and os.path.exists(self.weights_bin_path):
             logger.info(f"Modelo encontrado no formato JSON + pesos binários: {self.model_json_path}, {self.weights_bin_path}")
             try:
                 with open(self.model_json_path, 'r') as json_file:
@@ -73,7 +65,7 @@ class ModelConverter:
                 logger.error(f"Erro ao carregar os pesos .bin: {e}")
                 return None
         else:
-            logger.error("Nenhum modelo encontrado nos formatos esperados (`.h5`, JSON + `.bin`).")
+            logger.error("Nenhum modelo encontrado nos formatos esperados (JSON + `.bin`).")
             return None
         
         return model
@@ -87,15 +79,12 @@ class ModelConverter:
             logger.info(f"Pesos lidos do arquivo .bin com {len(weights)} elementos.")
 
             # Atribui os pesos ao modelo
-            # Assumindo que o número de pesos corresponde ao número de camadas do modelo
-            # O TensorFlow espera que os pesos sejam atribuídos na ordem correta, camada por camada
             weight_shapes = [layer.get_weights()[0].shape for layer in model.layers if len(layer.get_weights()) > 0]
             current_idx = 0
             for i, layer in enumerate(model.layers):
                 if len(layer.get_weights()) > 0:
                     weight_shape = weight_shapes[i]
                     weight_size = np.prod(weight_shape)  # Tamanho do peso dessa camada
-                    # Aqui ajustamos a atribuição dos pesos para cada camada corretamente
                     layer.set_weights([weights[current_idx:current_idx + weight_size].reshape(weight_shape)])
                     current_idx += weight_size
             logger.info("Pesos binários atribuídos ao modelo com sucesso.")
