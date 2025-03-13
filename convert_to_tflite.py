@@ -95,7 +95,8 @@ class ModelConverter:
                 if len(layer.get_weights()) > 0:
                     weight_shape = weight_shapes[i]
                     weight_size = np.prod(weight_shape)  # Tamanho do peso dessa camada
-                    layer.set_weights([weights[current_idx:current_idx+weight_size].reshape(weight_shape)])
+                    # Aqui ajustamos a atribuição dos pesos para cada camada corretamente
+                    layer.set_weights([weights[current_idx:current_idx + weight_size].reshape(weight_shape)])
                     current_idx += weight_size
             logger.info("Pesos binários atribuídos ao modelo com sucesso.")
         except Exception as e:
