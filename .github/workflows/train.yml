@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Instalar dependências
+      - name: Instalar dependências do Node.js
         run: npm install
 
       - name: Instalar dependências do TensorFlow
@@ -38,39 +38,42 @@ jobs:
 
       - name: Verificar conteúdo do diretório training/model
         run: |
-          # Verificar se os arquivos model.json e weights.bin existem
-          if [ -f "training/model/model.json" ] && [ -f "training/model/weights.bin" ]; then
-            echo "Arquivos model.json e weights.bin encontrados!"
+          if [ -f "training/model/model.json" ] && [ -f "training/model.weights.h5" ]; then
+            echo "Modelo salvo corretamente (model.json e model.weights.h5 encontrados)!"
           else
-            echo "Arquivos não encontrados ou estrutura de diretórios inesperada."
+            echo "Arquivos do modelo não encontrados ou estrutura de diretórios inesperada."
             exit 1
           fi
 
-      - name: Converter modelo .json e .bin para .tflite
+      - name: Converter modelo para .tflite
         run: |
-          if [ -f "training/model/model.json" ] && [ -f "training/model/weights.bin" ]; then
-            echo "Carregando modelo com arquivos separados (model.json e weights.bin)"
-            python convert_to_tflite.py  # Certifique-se de que o script está configurado para lidar com esses arquivos
+          if [ -f "training/model/model.json" ] && [ -f "training/model.weights.h5" ]; then
+            echo "Iniciando conversão para .tflite..."
+            python convert_to_tflite.py
           else
-            echo "Nenhum arquivo de modelo válido encontrado."
+            echo "Nenhum arquivo de modelo válido encontrado para conversão."
+            exit 1
+          fi
+
+      - name: Verificar se o modelo .tflite foi gerado
+        run: |
+          if [ -f "training/model/model.tflite" ]; then
+            echo "Modelo convertido para .tflite com sucesso!"
+          else
+            echo "Erro: modelo .tflite não foi encontrado."
             exit 1
           fi
 
       - name: Instalar Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Autenticar Firebase com Service Account
+      - name: Configurar credenciais do Firebase
         run: |
-          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > $HOME/firebase-service-account.json
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/firebase-service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
 
       - name: Configurar Firebase com o projeto específico
-        run: firebase use ml-training-ghactions --alias default
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: firebase use --project ml-training-ghactions --alias default
 
       - name: Fazer Deploy do Modelo para Firebase ML
-        run: firebase ml:models deploy --model-file training_model.tflite --project ml-training-ghactions
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+        run: firebase ml:models deploy --model-file training/model/model.tflite --project ml-training-ghactions

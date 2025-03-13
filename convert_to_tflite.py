@@ -1,10 +1,10 @@
 import tensorflow as tf
-from tensorflow.keras.models import model_from_json
-import os
+from tensorflow.keras.models import model_from_json, load_model
 import numpy as np
+import os
 
 def load_weights_bin(model, weights_bin_path):
-    """Tenta carregar os pesos de um arquivo binário."""
+    """Carrega pesos do modelo a partir de um arquivo binário."""
     if not os.path.exists(weights_bin_path):
         raise FileNotFoundError(f"Arquivo de pesos '{weights_bin_path}' não encontrado.")
 
@@ -13,35 +13,51 @@ def load_weights_bin(model, weights_bin_path):
         if len(weights) == 0:
             raise ValueError("O arquivo de pesos está vazio.")
         
-        # Tenta carregar os pesos diretamente
-        model.set_weights(weights)
+        # Define os pesos no modelo
+        model.set_weights([weights])
         print("Pesos carregados com sucesso!")
     except Exception as e:
         raise RuntimeError(f"Erro ao carregar os pesos do binário: {e}")
 
-def convert_model(model_json_path, weights_bin_path, output_path):
-    """Converte um modelo Keras salvo em JSON + pesos binários para TFLite."""
-    # Verifica a existência dos arquivos
-    if not os.path.exists(model_json_path):
-        raise FileNotFoundError(f"Arquivo de modelo JSON '{model_json_path}' não encontrado.")
+def convert_model(output_path):
+    """Converte um modelo salvo em Keras (`.h5`) ou JSON + pesos binários (`.bin`) para TFLite."""
+    
+    # Diretórios esperados
+    model_json_path = 'training/model/model.json'
+    weights_bin_path = 'training/model/weights.bin'
+    keras_model_path = 'training/model/model.h5'
 
-    # Carrega a arquitetura do modelo
-    with open(model_json_path, 'r') as json_file:
-        model_json = json_file.read().strip()  # Remove espaços extras
+    # Verifica se o modelo está salvo no formato Keras
+    if os.path.exists(keras_model_path):
+        print(f"Modelo encontrado em formato Keras: {keras_model_path}")
+        try:
+            model = load_model(keras_model_path)
+        except Exception as e:
+            raise RuntimeError(f"Erro ao carregar o modelo Keras: {e}")
 
-    if not model_json:
-        raise ValueError("O arquivo model.json está vazio ou inválido.")
+    # Caso contrário, verifica se está no formato JSON + binário
+    elif os.path.exists(model_json_path) and os.path.exists(weights_bin_path):
+        print(f"Modelo encontrado em formato JSON + pesos binários: {model_json_path}, {weights_bin_path}")
+        
+        # Carrega a arquitetura do modelo
+        try:
+            with open(model_json_path, 'r') as json_file:
+                model_json = json_file.read().strip()
+            if not model_json:
+                raise ValueError("O arquivo model.json está vazio ou inválido.")
 
-    try:
-        model = model_from_json(model_json)
-    except Exception as e:
-        raise RuntimeError(f"Erro ao carregar o modelo a partir do JSON: {e}")
+            model = model_from_json(model_json)
+        except Exception as e:
+            raise RuntimeError(f"Erro ao carregar o modelo a partir do JSON: {e}")
 
-    # Tenta carregar os pesos
-    try:
-        load_weights_bin(model, weights_bin_path)
-    except Exception as e:
-        raise RuntimeError(f"Erro ao carregar os pesos: {e}")
+        # Carrega os pesos
+        try:
+            load_weights_bin(model, weights_bin_path)
+        except Exception as e:
+            raise RuntimeError(f"Erro ao carregar os pesos: {e}")
+
+    else:
+        raise FileNotFoundError("Nenhum modelo encontrado nos formatos Keras (`.h5`) ou JSON + binário (`.bin`).")
 
     # Converter o modelo para TFLite
     try:
@@ -57,8 +73,5 @@ def convert_model(model_json_path, weights_bin_path, output_path):
     print(f"Modelo convertido salvo em: {output_path}")
 
 if __name__ == "__main__":
-    model_json_path = 'training/model/model.json'
-    weights_bin_path = 'training/model/weights.bin'
-    output_path = 'training_model.tflite'
-
-    convert_model(model_json_path, weights_bin_path, output_path)
+    output_path = 'training/model/model.tflite'
+    convert_model(output_path)

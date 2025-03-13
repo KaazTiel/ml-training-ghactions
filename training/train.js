@@ -16,23 +16,17 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
     await model.fit(xs, ys, { epochs: 100 });
     console.log("Treinamento concluído!");
 
-    // Garantir que o diretório exista antes de salvar
+    // Diretório onde o modelo será salvo
     const modelDir = 'training/model';
     if (!fs.existsSync(modelDir)) {
         fs.mkdirSync(modelDir, { recursive: true });  // Cria o diretório se não existir
     }
 
-    // Salvar a arquitetura do modelo (JSON)
     try {
-        const modelJson = model.toJSON(); // Obtém a arquitetura em JSON
-        fs.writeFileSync(path.join(modelDir, 'model.json'), JSON.stringify(modelJson));
-        console.log("Modelo (JSON) salvo com sucesso!");
+        // Salvar o modelo no formato Keras (.json + .h5)
+        await model.save(`file://${modelDir}`);
 
-        // Salvar os pesos do modelo (binário)
-        const weights = model.getWeights(); // Obtém os pesos do modelo
-        const weightBuffer = Buffer.concat(weights.map(weight => Buffer.from(weight.dataSync())));
-        fs.writeFileSync(path.join(modelDir, 'weights.bin'), weightBuffer);
-        console.log("Pesos (weights.bin) salvos com sucesso!");
+        console.log("Modelo salvo com sucesso no formato Keras!");
     } catch (error) {
         console.error("Erro ao salvar o modelo:", error);
     }
