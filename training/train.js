@@ -23,10 +23,10 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
     }
 
     try {
-        // Salvar o modelo no formato Keras (.json + .bin)
-        await model.save(`file://${modelDir}`, save_format='tf');
+        // Salvar o modelo no formato Keras (.h5)
+        await model.save(`file://${modelDir}/model.h5`);
 
-        console.log("Modelo salvo com sucesso no formato Keras!");
+        console.log("Modelo salvo com sucesso no formato Keras (.h5)!");
     } catch (error) {
         console.error("Erro ao salvar o modelo:", error);
     }
