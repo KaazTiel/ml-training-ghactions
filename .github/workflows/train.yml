@@ -63,22 +63,17 @@ jobs:
 
       - name: Converter modelo para .tflite
         run: |
-          # Verificar se 'model.h5' é um diretório
-          if [ -d "training/model/model.h5" ]; then
-            # Encontrar os arquivos dentro de 'model.h5'
-            MODEL_JSON=$(find training/model/model.h5 -type f -name "model.json")
-            MODEL_WEIGHTS=$(find training/model/model.h5 -type f -name "weights.bin")
+          # Definir caminhos dos arquivos esperados
+          MODEL_JSON="training/model/model.json"
+          MODEL_WEIGHTS="training/model/weights.bin"
       
-            if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
-              echo "❌ Arquivos de modelo (.json ou .bin) não encontrados dentro do diretório model.h5!"
-              exit 1
-            else
-              echo "📌 Iniciando conversão do modelo para .tflite..."
-              python convert_to_tflite.py --model_json "$MODEL_JSON" --model_weights "$MODEL_WEIGHTS"
-            fi
-          else
-            echo "❌ 'model.h5' não é um diretório válido."
+          # Verificar se os arquivos existem
+          if [ ! -f "$MODEL_JSON" ] || [ ! -f "$MODEL_WEIGHTS" ]; then
+            echo "❌ Arquivos de modelo (.json ou .bin) não encontrados na pasta 'training/model/'!"
             exit 1
+          else
+            echo "📌 Iniciando conversão do modelo para .tflite..."
+            python convert_to_tflite.py --model_json "$MODEL_JSON" --model_weights "$MODEL_WEIGHTS"
           fi
 
       - name: Verificar se o modelo .tflite foi gerado
