@@ -24,7 +24,7 @@ model.compile({ optimizer: 'sgd', loss: 'meanSquaredError' });
 
     try {
         // Salvar o modelo no formato Keras (.h5)
-        await model.save(`file://${modelDir}/model.h5`);
+        await model.save(`file://${modelDir}`);
 
         console.log("Modelo salvo com sucesso no formato Keras (.h5)!");
     } catch (error) {
