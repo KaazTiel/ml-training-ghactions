@@ -23,19 +23,12 @@ jobs:
           npm install
           npm install @tensorflow/tfjs
 
-      # - name: Instalar dependências do TensorFlow
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     python -m pip install tensorflow
-      #     python -m pip install tensorflowjs  # Adiciona a instalação do tensorflowjs
-
       - name: Criar ambiente virtual Python
         run: |
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install tensorflow
-          python -m pip install tensorflowjs  # Instala tensorflowjs no ambiente virtual
+          python -m pip install tensorflow tensorflowjs  # Instala tensorflowjs no ambiente virtual
 
       - name: Executar treinamento do modelo
         run: npm run train
@@ -63,6 +56,8 @@ jobs:
 
       - name: Converter modelo para .tflite
         run: |
+          source venv/bin/activate  # Ativa ambiente virtual
+          
           # Definir caminhos dos arquivos esperados
           MODEL_JSON="training/model/model.json"
           MODEL_WEIGHTS="training/model/weights.bin"
@@ -76,8 +71,11 @@ jobs:
             python convert_to_tflite.py --model_json "$MODEL_JSON" --model_weights "$MODEL_WEIGHTS"
           fi
 
-      - name: Verificar se o modelo .tflite foi gerado
+      - name: Debug – Verificar se o modelo .tflite foi gerado
         run: |
+          echo "📂 Arquivos gerados após conversão:"
+          ls -lah training/model/
+
           if [ -f "training/model/model.tflite" ]; then
             echo "✅ Modelo convertido para .tflite com sucesso!"
           else
