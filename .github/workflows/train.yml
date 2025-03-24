@@ -28,17 +28,10 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install tensorflow tensorflowjs  # Instala tensorflowjs no ambiente virtual
+          python -m pip install tensorflow tensorflowjs
 
       - name: Executar treinamento do modelo
         run: npm run train
-
-      - name: Debug – Listar arquivos gerados pelo treinamento
-        run: |
-          echo "📂 Estrutura do diretório training/"
-          ls -R training/
-          echo "📂 Estrutura do diretório training/model/"
-          ls -lah training/model/ || echo "Diretório training/model não encontrado!"
 
       - name: Verificar arquivos gerados pelo treinamento
         run: |
@@ -54,45 +47,16 @@ jobs:
             echo "Pesos: $MODEL_WEIGHTS"
           fi
 
-      - name: Converter modelo para .tflite
-        run: |
-          source venv/bin/activate  # Ativa ambiente virtual
-          
-          # Definir caminhos dos arquivos esperados
-          MODEL_JSON="training/model/model.json"
-          MODEL_WEIGHTS="training/model/weights.bin"
-      
-          # Verificar se os arquivos existem
-          if [ ! -f "$MODEL_JSON" ] || [ ! -f "$MODEL_WEIGHTS" ]; then
-            echo "❌ Arquivos de modelo (.json ou .bin) não encontrados na pasta 'training/model/'!"
-            exit 1
-          else
-            echo "📌 Iniciando conversão do modelo para .tflite..."
-            python convert_to_tflite.py --model_json "$MODEL_JSON" --model_weights "$MODEL_WEIGHTS"
-          fi
-
-      - name: Debug – Verificar se o modelo .tflite foi gerado
-        run: |
-          echo "📂 Arquivos gerados após conversão:"
-          ls -lah training/model/
-
-          if [ -f "training/model/model.tflite" ]; then
-            echo "✅ Modelo convertido para .tflite com sucesso!"
-          else
-            echo "❌ Erro: modelo .tflite não foi encontrado."
-            exit 1
-          fi
-
-      - name: Instalar Firebase CLI
-        run: npm install -g firebase-tools
-
-      - name: Configurar credenciais do Firebase
-        run: |
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > $HOME/firebase-service-account.json
-          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
-
-      - name: Configurar Firebase com o projeto específico
-        run: firebase use --project ml-training-ghactions --alias default
-
-      - name: Fazer Deploy do Modelo para Firebase ML
-        run: firebase ml:models deploy --model-file training/model/model.tflite --project ml-training-ghactions
+      - name: Criar um Release no GitHub e anexar arquivos
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v1.0.${{ github.run_number }}"  # Usa um número de build incremental
+          name: "Modelo Treinado v1.0.${{ github.run_number }}"
+          body: "Este release contém o modelo treinado da execução automática do workflow."
+          draft: false
+          prerelease: false
+          files: |
+            training/model/model.json
+            training/model/weights.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
