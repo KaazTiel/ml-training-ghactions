@@ -43,13 +43,14 @@ jobs:
       - name: Criar um Release no GitHub e anexar arquivos
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "v1.0.${{ github.run_number }}"  # Usa um número de build incremental
+          tag_name: "v1.0.${{ github.run_number }}"
           name: "Modelo Treinado v1.0.${{ github.run_number }}"
-          body: "Este release contém o modelo treinado da execução automática do workflow."
           draft: false
           prerelease: false
+          generate_release_notes: false  # Evita anexar o código-fonte automaticamente
           files: |
             training/model/model.json
             training/model/weights.bin
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        
