@@ -7,6 +7,16 @@ const SPREADSHEET_ID = "1LcUUTuImfcS3inEbR67diqMdlEBvzi9OawPelshhcfE";
 const RANGE = "B2:B1000";
 const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
+// Função para normalizar um valor entre 0 e 1
+function normalize(value, min, max) {
+  return (value - min) / (max - min);
+}
+
+// Função para desnormalizar um valor
+function denormalize(value, min, max) {
+  return value * (max - min) + min;
+}
+
 const requestToSheet = async () => {
   try {
     const response = await fetch(url);
@@ -60,13 +70,25 @@ const requestToSheet = async () => {
       }
     }
 
+    // Normalizar os dados de entrada (dadosEixoX) e saída (dadosEixoY)
+    const minX = Math.min(...dadosEixoX);
+    const maxX = Math.max(...dadosEixoX);
+    const minY = Math.min(...dadosEixoY);
+    const maxY = Math.max(...dadosEixoY);
+
+    const dadosEixoXNorm = dadosEixoX.map((x) => normalize(x, minX, maxX));
+    const dadosEixoYNorm = dadosEixoY.map((y) => normalize(y, minY, maxY));
+
+    console.log("Dados normalizados de X:", dadosEixoXNorm);
+    console.log("Dados normalizados de Y:", dadosEixoYNorm);
+
     // Criação do modelo
     const model = tf.sequential();
     model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
     model.compile({ loss: "meanSquaredError", optimizer: "sgd" });
 
-    const x = tf.tensor(dadosEixoX, [dadosEixoX.length, 1]);
-    const y = tf.tensor(dadosEixoY, [dadosEixoY.length, 1]);
+    const x = tf.tensor(dadosEixoXNorm, [dadosEixoXNorm.length, 1]);
+    const y = tf.tensor(dadosEixoYNorm, [dadosEixoYNorm.length, 1]);
 
     (async () => {
       console.log("Iniciando treinamento...");
