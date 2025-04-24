@@ -21,7 +21,6 @@ jobs:
       - name: Instalar dependências do Node.js
         run: |
           npm install
-          npm install @tensorflow/tfjs
 
       - name: Executar treinamento do modelo
         run: npm run train
