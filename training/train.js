@@ -1,6 +1,6 @@
-const fs = require("fs");
-const parse = require("csv-parse/sync");
-const ARIMA = require("arima");
+import fs from "fs";
+import { parse } from "csv-parse/sync";
+import ARIMA from "arima";
 
 const file = fs.readFileSync("training/Cotacoes_Filtradas_nov_abril.csv");
 const records = parse.parse(file, {
