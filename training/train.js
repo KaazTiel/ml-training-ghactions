@@ -3,7 +3,7 @@ import { parse } from "csv-parse/sync";
 import ARIMA from "arima";
 
 const file = fs.readFileSync("training/Cotacoes_Filtradas_nov_abril.csv");
-const records = parse.parse(file, {
+const records = parse(file, {
   columns: true,
   skip_empty_lines: true,
   delimiter: ",", 
