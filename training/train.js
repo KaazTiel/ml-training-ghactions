@@ -1,19 +1,16 @@
-import fs from "fs";
-import { parse } from "csv-parse/sync";
-import ARIMA from "arima";
+const fs = require("fs");
+const parse = require("csv-parse/sync");
+const ARIMA = require("arima");
 
-// leitura do arquivo
 const file = fs.readFileSync("training/Cotacoes_Filtradas_nov_abril.csv");
-const records = parse(file, {
+const records = parse.parse(file, {
   columns: true,
   skip_empty_lines: true,
-  delimiter: ",",
+  delimiter: ",", 
 });
 
-// extração da série temporal
-const ts = records.map((r) => parseFloat(r["Último"])).reverse();
+const ts = records.map((r) => parseFloat(r["Último"])).reverse(); 
 
-// criação e treino do modelo
 const arima = new ARIMA({
   p: 3,
   d: 1,
@@ -23,15 +20,15 @@ const arima = new ARIMA({
   Q: 0,
   s: 5,
   verbose: false,
-}).train(ts);
+});
 
-// criação da pasta se necessário
+arima.train(ts);
+
 const modelDir = "training/model";
 if (!fs.existsSync(modelDir)) {
   fs.mkdirSync(modelDir, { recursive: true });
 }
 
-// salvamento do modelo treinado
 fs.writeFileSync(`${modelDir}/sarima-model.json`, JSON.stringify(arima.toJSON()));
 
-console.log("Modelo SARIMA salvo em JSON.");
+console.log("✅ Modelo SARIMA salvo com sucesso.");
