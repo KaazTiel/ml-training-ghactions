@@ -27,24 +27,28 @@ jobs:
 
       - name: Verificar arquivos gerados pelo treinamento
         run: |
-          if [ ! -f training/model/sarima-model.json ]; then
-            echo "❌ Arquivo do modelo SARIMA não encontrado!"
+          MODEL_JSON=$(find training/model -type f -name "model.json")
+          MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
+
+          if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
+            echo "❌ Arquivos do modelo não encontrados!"
             exit 1
           else
-            echo "✅ Modelo SARIMA encontrado: training/model/sarima-model.json"
+            echo "✅ Modelo encontrado:"
+            echo "JSON: $MODEL_JSON"
+            echo "Pesos: $MODEL_WEIGHTS"
           fi
 
       - name: Criar um Release no GitHub e anexar arquivos
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "v1.0.${{ github.run_number }}"
-          name: "Modelo SARIMA Treinado v1.0.${{ github.run_number }}"
+          name: "Modelo Treinado v1.0.${{ github.run_number }}"
           draft: false
           prerelease: false
-          generate_release_notes: false
+          generate_release_notes: false 
           files: |
-            training/model/sarima-model.json
+            training/model/model.json
+            training/model/weights.bin
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
-        
