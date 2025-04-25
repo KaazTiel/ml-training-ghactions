@@ -1,5 +1,6 @@
 import * as tf from "@tensorflow/tfjs";
-import { ARIMA } from "arima";
+import pkg from "arima";
+const { ARIMA } = pkg;
 import fs from "fs";
 import parse from "csv-parse/sync";
 
