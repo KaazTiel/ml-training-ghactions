@@ -1,5 +1,5 @@
 const fs = require("fs");
-const tf = require("@tensorflow/tfjs");
+const tf = require("@tensorflow/tfjs-node");
 const parse = require("csv-parse/sync");
 const ARIMA = require("arima");
 
