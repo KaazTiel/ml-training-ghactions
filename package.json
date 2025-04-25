@@ -2,7 +2,6 @@
     "name": "ml-training",
     "version": "1.0.0",
     "description": "Treinamento automático de modelo ML com TensorFlow.js",
-    "type": "module",
     "main": "training/train.js",
     "scripts": {
         "train": "node training/train.js"
