@@ -1,8 +1,8 @@
-import * as tf from "@tensorflow/tfjs";
-import pkg from "arima";
-const { ARIMA } = pkg;
+import * as tf from "@tensorflow/tfjs"; // ou "@tensorflow/tfjs-node" se estiver em ambiente Node.js
 import fs from "fs";
-import parse from "csv-parse/sync";
+import * as parse from "csv-parse/sync";
+import arimaPkg from "arima";
+const { ARIMA } = arimaPkg;
 
 // ===== Configurações =====
 const FILE_PATH = "training/Cotacoes_Filtradas_nov_abril.csv";
