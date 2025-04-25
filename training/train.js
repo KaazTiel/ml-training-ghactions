@@ -1,4 +1,4 @@
-import * as tf from "@tensorflow/tfjs-node";
+import * as tf from "@tensorflow/tfjs";
 import { ARIMA } from "arima";
 import fs from "fs";
 import parse from "csv-parse/sync";
