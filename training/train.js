@@ -1,11 +1,11 @@
-const fs = require("fs");
-const tf = require("@tensorflow/tfjs-node");
-const parse = require("csv-parse/sync");
+const tf = require("@tensorflow/tfjs-node"); // Ainda usa a versão node para treinar com performance
 const ARIMA = require("arima");
 
-// ===== Configurações =====
-const FILE_PATH = "training/Cotacoes_Filtradas_nov_abril.csv";
-const COLUNA = "Último"; // Nome da coluna com os preços
+// ====== Configurações da Google Sheets API ======
+const API_KEY = "AIzaSyD36C-k9xtxWnkzTv5RxZIf-rqyAtLWed4";
+const SPREADSHEET_ID = "1cTcdqJtk1qfWeCmfOAKkLae2vZfEd8rYLWzyQWPTb4A";
+const RANGE = "B3:B1000"; // Coluna com os valores
+const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
 // ===== Funções de normalização =====
 const normalize = (x, min, max) => (x - min) / (max - min);
@@ -13,16 +13,24 @@ const denormalize = (x, min, max) => x * (max - min) + min;
 
 // ===== Função principal =====
 const trainModel = async () => {
-  // Lê e parseia o CSV
-  const file = fs.readFileSync(FILE_PATH);
-  const records = parse.parse(file, {
-    columns: true,
-    skip_empty_lines: true,
-    delimiter: ",",
-  });
+  // Busca os dados da Google Sheets
+  const response = await fetch(url);
+  const data = await response.json();
 
-  // Extrai os dados da coluna desejada e ordena do mais antigo ao mais recente
-  const ts = records.map((r) => parseFloat(r[COLUNA].replace(",", "."))).reverse();
+  if (!data.values || data.values.length === 0) {
+    console.error("Nenhum dado encontrado na planilha.");
+    return;
+  }
+
+  // Converte os dados em uma série temporal de floats
+  const ts = data.values
+    .map((linha) => {
+      const val = linha[0]?.replace(",", ".");
+      const num = parseFloat(val);
+      return isNaN(num) ? null : num;
+    })
+    .filter((val) => val !== null)
+    .reverse(); // Ordena do mais antigo para o mais recente
 
   // SARIMA
   const arima = new ARIMA({ p: 3, d: 1, q: 3, P: 1, D: 1, Q: 0, s: 5 }).train(ts);
@@ -57,9 +65,17 @@ const trainModel = async () => {
 
   // Salvar modelo
   const dir = "training/model";
+  const fs = require("fs");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   await model.save(`file://${dir}`);
   console.log("✅ Modelo salvo com sucesso!");
+
+  // Previsão final híbrida
+  const inputLSTM = tf.tensor3d([normalized.slice(-window).map((v) => [v])]);
+  const predLSTM = model.predict(inputLSTM);
+  const predValue = predLSTM.dataSync()[0];
+
+  console.log("📈 Previsão final (SARIMA + LSTM):", denormalize(predValue, min, max).toFixed(2));
 };
 
 trainModel();
