@@ -3,7 +3,7 @@ name: Train and Deploy ML Model
 on:
   schedule:
     - cron: '0 0 * * *'  # Executa diariamente à meia-noite (UTC)
-  workflow_dispatch:
+  workflow_dispatch:  # Permite execução manual
 
 jobs:
   train:
@@ -19,15 +19,19 @@ jobs:
           node-version: '18'
 
       - name: Instalar dependências do Node.js
-        run: npm install
+        run: |
+          npm install
 
       - name: Executar treinamento do modelo
         run: npm run train
 
-      - name: Verificar arquivos gerados pelo treinamento
+      - name: Listar arquivos após treinamento (para debug)
+        run: ls -R training/
+
+      - name: Verificar arquivos gerados pelo treinamento e arquivo JSON de predição
         run: |
-          MODEL_JSON=$(find training/model -type f -name "model.json")
-          MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
+          MODEL_JSON=$(find training -type f -name "model.json")
+          MODEL_WEIGHTS=$(find training -type f -name "weights.bin")
           PREDICTION_JSON="training/prediction_data.json"
 
           if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
@@ -55,8 +59,8 @@ jobs:
           prerelease: false
           generate_release_notes: false
           files: |
-            training/model/model.json
-            training/model/weights.bin
+            training/model.json
+            training/weights.bin
             training/prediction_data.json
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
