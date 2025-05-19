@@ -19,23 +19,17 @@ jobs:
           node-version: '18'
 
       - name: Instalar dependências do Node.js
-        run: npm install
+        run: |
+          npm install
 
       - name: Executar treinamento do modelo
         run: npm run train
 
-      - name: Listar todos os arquivos após treinamento (debug)
-        run: find . -type f
-
       - name: Verificar arquivos gerados pelo treinamento
         run: |
-          MODEL_JSON=$(find . -type f -name "model.json" || true)
-          MODEL_WEIGHTS=$(find . -type f -name "weights.bin" || true)
-          PREDICTION_JSON=$(find . -type f -name "prediction_data.json" || true)
-
-          echo "Modelo JSON encontrado em: $MODEL_JSON"
-          echo "Pesos encontrados em: $MODEL_WEIGHTS"
-          echo "Arquivo de predição encontrado em: $PREDICTION_JSON"
+          MODEL_JSON=$(find training/model -type f -name "model.json")
+          MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
+          PREDICTION_JSON=$(find training/model -type f -name "prediction_data.json")
 
           if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
             echo "❌ Arquivos do modelo não encontrados!"
@@ -47,6 +41,11 @@ jobs:
             exit 1
           fi
 
+          echo "✅ Modelo encontrado:"
+          echo "JSON: $MODEL_JSON"
+          echo "Pesos: $MODEL_WEIGHTS"
+          echo "Predição: $PREDICTION_JSON"
+
       - name: Criar um Release no GitHub e anexar arquivos
         uses: softprops/action-gh-release@v1
         with:
@@ -54,10 +53,10 @@ jobs:
           name: "Modelo Treinado v1.0.${{ github.run_number }}"
           draft: false
           prerelease: false
-          generate_release_notes: false
+          generate_release_notes: false 
           files: |
-            ${{ env.MODEL_JSON }}
-            ${{ env.MODEL_WEIGHTS }}
-            ${{ env.PREDICTION_JSON }}
+            training/model/model.json
+            training/model/weights.bin
+            training/model/prediction_data.json
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
