@@ -1,21 +1,20 @@
 const tf = require("@tensorflow/tfjs-node");
 const ARIMA = require("arima");
 const fs = require("fs");
-const fetch = require("node-fetch"); // caso não tenha fetch global
+const fetch = require("node-fetch");
 
 // ====== Configurações da Google Sheets API ======
 const API_KEY = "AIzaSyD36C-k9xtxWnkzTv5RxZIf-rqyAtLWed4";
-const SPREADSHEET_ID = "1cTcdqJtk1qfWeCmfOAKkLae2vZfEd8rYLWzyQWPTb4";
-const RANGE = "A3:B1000"; // Data em A, Preço em B
+const SPREADSHEET_ID = "1cTcdqJtk1qfWeCmfOAKkLae2vZfEd8rYLWzyQWPTb4A";
+const RANGE = "A3:B1000"; // Data na coluna A, Preço na coluna B
 const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${API_KEY}`;
 
 // ===== Funções de normalização =====
 const normalize = (x, min, max) => (x - min) / (max - min);
 const denormalize = (x, min, max) => x * (max - min) + min;
 
-// ===== Função principal =====
 const trainModel = async () => {
-  // Busca os dados da Google Sheets
+  // Busca os dados da planilha
   const response = await fetch(url);
   const data = await response.json();
 
@@ -24,32 +23,30 @@ const trainModel = async () => {
     return;
   }
 
-  // Extrai pares {date, price} e filtra valores válidos
+  // Extrai datas e preços, filtra entradas inválidas
   const datePricePairs = data.values
     .map(([dateStr, priceStr]) => {
       const price = parseFloat(priceStr?.replace(",", "."));
-      return !isNaN(price) ? { date: dateStr, price } : null;
+      return !isNaN(price) && dateStr ? { date: dateStr, price } : null;
     })
     .filter((entry) => entry !== null)
-    .reverse(); // ordem do mais antigo para o mais recente
+    .reverse(); // ordena do mais antigo para o mais recente
 
-  // Apenas os preços para o modelo
-  const ts = datePricePairs.map(({ price }) => price);
+  // Separar arrays para datas e preços
+  const dates = datePricePairs.map((d) => d.date);
+  const prices = datePricePairs.map((d) => d.price);
 
-  // SARIMA
-  const arima = new ARIMA({ p: 3, d: 1, q: 3, P: 1, D: 1, Q: 0, s: 5 }).train(ts);
+  // Treinar modelo SARIMA e prever
+  const arima = new ARIMA({ p: 3, d: 1, q: 3, P: 1, D: 1, Q: 0, s: 5 }).train(prices);
   const [sarimaPred] = arima.predict(1);
-  const predValueSARIMA = sarimaPred[0];
-
-  // Estende a série com a predição SARIMA
-  const extended = [...ts, predValueSARIMA];
+  const extendedPrices = [...prices, sarimaPred[0]];
 
   // Normalização
-  const min = Math.min(...extended);
-  const max = Math.max(...extended);
-  const normalized = extended.map((x) => normalize(x, min, max));
+  const min = Math.min(...extendedPrices);
+  const max = Math.max(...extendedPrices);
+  const normalized = extendedPrices.map((x) => normalize(x, min, max));
 
-  // Preparar janelas para LSTM
+  // Preparar dados para LSTM
   const window = 5;
   const xs = [], ys = [];
   for (let i = 0; i < normalized.length - window; i++) {
@@ -60,7 +57,7 @@ const trainModel = async () => {
   const xsTensor = tf.tensor3d(xs);
   const ysTensor = tf.tensor2d(ys);
 
-  // Modelo LSTM
+  // Construir e treinar o modelo LSTM
   const model = tf.sequential();
   model.add(tf.layers.lstm({ units: 50, inputShape: [window, 1] }));
   model.add(tf.layers.dense({ units: 1 }));
@@ -76,25 +73,22 @@ const trainModel = async () => {
   await model.save(`file://${dir}`);
   console.log("✅ Modelo salvo com sucesso!");
 
-  // Previsão final híbrida LSTM com input da última janela
+  // Previsão final LSTM (com entrada da última janela)
   const inputLSTM = tf.tensor3d([normalized.slice(-window).map((v) => [v])]);
   const predLSTM = model.predict(inputLSTM);
   const predValueLSTM = predLSTM.dataSync()[0];
-
-  // Previsão final combinada (pode ajustar aqui, por ex. média simples)
-  // Aqui só uso LSTM para saída, mas poderia combinar SARIMA+LSTM se quiser
   const finalPrediction = denormalize(predValueLSTM, min, max);
 
   console.log("📈 Previsão final (SARIMA + LSTM):", finalPrediction.toFixed(2));
 
-  // Salvar JSON com a predição no topo
+  // Salvar JSON com dados originais + predição (com a previsão como um novo objeto)
   const jsonData = {
     prediction: finalPrediction.toFixed(2),
-    data: datePricePairs,
+    data: [...datePricePairs, { date: "Previsão", price: finalPrediction }],
   };
 
   fs.writeFileSync("training/prediction_data.json", JSON.stringify(jsonData, null, 2));
-  console.log("✅ JSON com datas e preços salvo com predição!");
+  console.log("✅ JSON com datas, preços e predição salvo!");
 };
 
 trainModel();
