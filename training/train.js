@@ -87,7 +87,7 @@ const trainModel = async () => {
     data: [...datePricePairs, { date: "Previsão", price: finalPrediction }],
   };
 
-  fs.writeFileSync("training/prediction_data.json", JSON.stringify(jsonData, null, 2));
+  fs.writeFileSync("training/model/prediction_data.json", JSON.stringify(jsonData, null, 2));
   console.log("✅ JSON com datas, preços e predição salvo!");
 };
 
