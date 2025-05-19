@@ -3,7 +3,7 @@ name: Train and Deploy ML Model
 on:
   schedule:
     - cron: '0 0 * * *'  # Executa diariamente à meia-noite (UTC)
-  workflow_dispatch:  # Permite execução manual
+  workflow_dispatch:
 
 jobs:
   train:
@@ -19,8 +19,7 @@ jobs:
           node-version: '18'
 
       - name: Instalar dependências do Node.js
-        run: |
-          npm install
+        run: npm install
 
       - name: Executar treinamento do modelo
         run: npm run train
@@ -29,6 +28,7 @@ jobs:
         run: |
           MODEL_JSON=$(find training/model -type f -name "model.json")
           MODEL_WEIGHTS=$(find training/model -type f -name "weights.bin")
+          PREDICTION_JSON="training/prediction_data.json"
 
           if [ -z "$MODEL_JSON" ] || [ -z "$MODEL_WEIGHTS" ]; then
             echo "❌ Arquivos do modelo não encontrados!"
@@ -39,6 +39,13 @@ jobs:
             echo "Pesos: $MODEL_WEIGHTS"
           fi
 
+          if [ ! -f "$PREDICTION_JSON" ]; then
+            echo "❌ Arquivo de predição JSON não encontrado!"
+            exit 1
+          else
+            echo "✅ Arquivo de predição JSON encontrado: $PREDICTION_JSON"
+          fi
+
       - name: Criar um Release no GitHub e anexar arquivos
         uses: softprops/action-gh-release@v1
         with:
@@ -46,9 +53,10 @@ jobs:
           name: "Modelo Treinado v1.0.${{ github.run_number }}"
           draft: false
           prerelease: false
-          generate_release_notes: false 
+          generate_release_notes: false
           files: |
             training/model/model.json
             training/model/weights.bin
+            training/prediction_data.json
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
